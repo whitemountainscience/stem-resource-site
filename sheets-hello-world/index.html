@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sheets API Hello World</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <h1>Read Google Sheets Data (No OAuth)</h1>
+    <pre id="content"></pre>
+    <div id="image-container"></div>
+
+    <script type="text/javascript">
+        // Enter your API key here
+        const API_KEY = 'AIzaSyDbRcX5JRaYe9lpuiLLS_4tFMHBaRGFVF8';
+
+        // Enter the spreadsheet ID and the range of cells you want to read
+        const SPREADSHEET_ID = '1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I';
+        const RANGE = 'hello-world!A1';  // e.g., 'Sheet1!A1'
+
+        function loadSheetsApi() {
+            gapi.client.setApiKey(API_KEY);
+            return gapi.client.load('https://sheets.googleapis.com/$discovery/rest?version=v4')
+                .then(() => {
+                    readCellValue();
+                }, (error) => {
+                    console.error('Error loading GAPI client for API', error);
+                });
+        }
+
+        function readCellValue() {
+            gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: RANGE,
+            }).then((response) => {
+                console.log('resp ', response);
+                const range = response.result;
+                if (range.values.length > 0) {
+                    const cellValue = range.values[0][0]; // Get the value of the first cell
+                    console.log(`Cell value: ${cellValue}`);
+                    // document.getElementById('content').innerText = `Cell value: ${cellValue}`;
+                    const img = document.createElement('img');
+
+                    img.src = cellValue;
+                    img.width = 300; // Set width in pixels
+                    img.height = 200; // Set height in pixels
+
+                    // Step 3: Append the image to the DOM
+                    const container = document.getElementById('image-container');
+                    container.appendChild(img);
+                } else {
+                    document.getElementById('content').innerText = 'No data found.';
+                }
+            }, (response) => {
+                document.getElementById('content').innerText = 'Error: ' + response.result.error.message;
+            });
+        }
+
+        function initClient() {
+            console.log('init');
+            gapi.load('client', loadSheetsApi);
+        }
+
+        initClient();
+    </script>
+</body>
+</html>

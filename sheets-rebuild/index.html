@@ -1,0 +1,230 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="./s/stem_site.css">
+        <link rel="stylesheet" type="text/css" href="./s/featherlight.css">
+        <script src="https://apis.google.com/js/api.js"></script>
+        
+            <!-- Font Awesome for buttons. Considering switching to local files before production -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        
+        
+        <!-- Javascript -->
+        <script src="https://code.jquery.com/jquery-latest.js"></script>
+        <script src="./s/featherlight.js"></script>
+        <script src="./s/shared_functions.js"></script>
+        <script src="./s/stem_site.js"></script>
+    </head>
+
+    <body>
+        <div class="page-layout">
+            <div class="filter-form">
+              <div class="filters">
+                <h3>Filter Activities By:</h3>
+              </div>
+              <div class="filters">
+                <select class="form-control form-control-lg" id="subject">
+                    <option value="">Subject</option>
+                </select><br />
+                <select class="form-control form-control-lg" id="experience">
+                    <option value="">Experience Level</option>
+                </select>
+                <div class="tooltip">
+                More info on Experience Level
+                  <span class="tooltiptext experience">Experience level is determined by school grade and STEM experience. Early Learners have no STEM experience and are usually in grades K-2. Beginners have little STEM experience and may be in grades 3-5, Intermediate means some experience or grades 6-8, and Advanced for solid STEM knowledge or grades 9+</span>
+                </div><br>
+                <div id="self-led-checkbox" class='tooltip'><!-- self-led'-->
+                  <input type='checkbox' id='self-led'>Search only Self Led Activities
+                  <span class="tooltiptext self-led">Click here to search for activities that students should be able to run on their own.</span>
+                </div>
+              </div>
+              <div class="filters" id="materials-filter">
+                <b>Materials Required: </b><br>
+                <!-- <input type="checkbox" id="no-tech" checked> Unplugged<br>
+                <input type="checkbox" id="tech" checked> Some Technology<br> -->
+                <input type="checkbox" id="browser" checked> Computer w/ Browser<br>
+                <input type="checkbox" id="tablet" checked> Tablet<br>
+                <input type="checkbox" id="pen-paper" checked> Pen and Paper<br>
+                <input type="checkbox" id="craft" checked> Crafting Materials<br>
+                <input type="checkbox" id="robotics" checked> Robotics<br> 
+                <input type="checkbox" id="lab-materials" checked> Lab Materials<br> 
+                <button id="uncheck-materials">Uncheck All</button>
+              </div>
+              <div class="filters">
+                <label>Keyword Search:<br /><input type="search" class="" placeholder="" aria-controls="resource-table"></label><br />
+                <button id="search" class='filter-button'>Search for Activities</button><br>
+                <button id="reset" class='filter-button'>Reset All Filters</button><br>
+                <div class='lds-ring'><div></div><div></div><div></div><div></div></div>
+              </div>
+              <span class='filter-instructions'>Choose at least one of the options above and then click 'Search for Activities' to filter resources.</span>
+            </div>
+            <span class="disclaimer">Thank you for working with this site-in-development! If you have an issue to report or feedback to share please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">click here.</a></span>
+            <div id="load-div" style="display: none">
+              Activities will appear here when they load. If nothing happens please wait a minute before refreshing the page.
+              If a problem persists please notify us by clicking on the form link above.
+            </div>  
+          
+            <div id="feature-container">
+              <h3>Featured Activities:</h3>
+              <div class="features">
+                <!-- <div class="featured-activity" id="featurediv1"></div>
+                <div class="featured-activity" id="featurediv2"></div>
+                <div class="featured-activity" id="featurediv3"></div> -->
+              </div>
+            </div>
+            <!-- <span class="spacer"></span> -->
+            <div id="content" class="grid-container">
+              <div id="results-info">
+                <span></span>
+                <span id='results-meta'></span>
+                <div id='page-buttons' class='page-controls'>
+                  <button class='last-page'>Previous Page</button>
+                  <button class='next-page'>Next Page</button>
+                </div>
+                <select class="form-control form-control-lg page-controls" id="results-per-page">
+                  <option value="25">Results per Page</option>  <!-- default is 50 per page --> 
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+              <span class="item-header">Activity
+                <span class="sort" id="activity"><i class="up"></i><i class="down"></i></span>
+              </span> 
+              <!-- <span class="item-header">Description</span>  -->
+              <span class="item-header">Author 
+                <span class="sort" id="author"><i class="up"></i><i class="down"></i></span>
+              </span>
+              <span class="item-header">Time
+                <span class="sort" id="time"><i class="up"></i><i class="down"></i></span>
+              </span>
+              <span class="item-header">Experience
+                <span class="sort" id="experience"><i class="up"></i><i class="down"></i></span>
+              </span>
+              <span class="item-header">Subject
+                <span class="sort" id="subject"><i class="up"></i><i class="down"></i></span>
+              </span>
+              <span class="item-header">Info</span> 
+              <span class="item-header">Comments</span> 
+            </div> 
+            <div id='bottom-page-buttons' class='page-controls' style="display: none">
+              <button class='last-page'>Previous Page</button>
+              <button class='next-page'>Next Page</button>
+            </div>
+          </div>
+        
+        <div class="footer footer-right"><i>Find a broken link? Please <a href="https://www.whitemountainscience.org/contact-us" target="_blank">let us know</a> so we can fix it!</i></div>
+          
+        
+        <!-- Scroll to Top Button -->
+        <button class="scroll-top" id="scroll-top-btn">
+          <i class="fa fa-chevron-up"></i>
+        </button>
+        
+        
+        
+        
+        
+        
+        <!-- Templates: These elements are accessed by Javascript and reformated to fill table/ lightbox elements. See stem_site.js and shared_functions.js -->
+    <div id="templates" hidden>
+        <div id="comment-template">
+            <!-- https://www.visualpharm.com/free-icons/comments-595b40b65ba036ed117d396b -->
+            <div class="comment-tooltip" style='z-index: pos'>
+            <a href='#' data-featherlight='#comment-box@index'>
+                <img src='./s/comments.png' class='comment-img'>
+                <span class="badge" id='comment-badge@index'></span>
+                <!-- <span class="tooltiptext comment" id="comment-hover@index">
+                <span><b>User Comments will appear here</b></span>
+                </span> -->
+            </a>
+            <div class="comment-box" id='comment-box@index' hidden>
+                <a href="*link" target='_blank'><h3>*title</h3></a><br>
+                <div id='comment-text@index'>
+                <h4>Be the first to add a comment!</h4><br>
+                </div>
+                <!-- <input type='text' value='Leave a comment here'> -->
+                <textarea rows='2' placeholder="Write a comment" id='new-comment@index' tabindex="1"></textarea><br>
+                <div class='comment-form' id='comment-form@index' style="display: none">
+                <!-- <input type='text' id='comm-text-index' value="comment" /> -->
+                Name/ Organization: <input type='text' placeholder="Anonymous" id='comment-name@index' tabindex="2"/><br>
+                <button class="submit-comment" id='post-comment@index' tabindex="3">Post Comment</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div id='feature-comment-template'>
+            <div class="comment-box" id='feature-comment-box@index'>
+            <div id='feature-comment-text@index'>
+                <h4>Be the first to add a comment!</h4><br>
+            </div>
+            <!-- <input type='text' value='Leave a comment here'> -->
+            <textarea rows='2' placeholder="Write a comment" id='feature-new-comment@index' tabindex="1"></textarea><br>
+            <div class='comment-form' id='feature-comment-form@index' style="display: none">
+                <!-- <input type='text' id='comm-text-index' value="comment" /> -->
+                <b>Name/ Organization: </b><input type='text' placeholder="Anonymous" id='feature-comment-name@index' tabindex="2"/><br>
+                <button class="submit-comment" id='feature-post-comment@index' tabindex="3">Post Comment</button>
+            </div>
+            </div>
+        </div>
+
+        <div id="featured-activity-template">
+            <div class='featured-activity' id='featurediv@index'>
+            <a href="#" data-featherlight="#feature@index"><div class="feature"><img class="feature" *img></div><br>
+            <span class="feature-link">@title</span></a>
+            <div style="display: none">
+                <div id="feature@index" style="padding: 10px;">
+                <h3>Activity Link: <a href="*link" target="_blank">@title</a></h3>
+                <br>*description<br><br>
+                <b>Experience Level: </b>*experience<br>
+                <b>Subject: </b>*subjects<br>
+                <b>Materials: </b>*materials<br>
+                <b>Author: </b><a target="_blank" href="*src_link">*source</a><br>   
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div id="info-lightbox-template">
+            <div class="*class" id="*id" hidden>
+                <a target="_blank" href="*link"><img class="lightbox" *img><span style="text-align: center;"><h3>*title</h3><span></span></span></a>
+                <br>
+                <span style="text-align: center;">*description</span><br><hr>
+                <span>This activity requires the following materials: *materials</span><br>
+                <span>Keyword tags: *tags</span>
+            </div>
+        </div>
+
+        <div id="lightbox-video-template">
+            <iframe *src allowfullscreen></iframe>
+            <!-- <video class="video-stream html5-main-video" controlslist="nodownload" *src></video> -->
+        </div>
+
+        <div id="adapt-text-template">
+            <hr><h4>Thanks for choosing an Activity for Adaptation!</h4>
+            <br>
+            <p><img class='adapt' src="./s/adapt-icon.png">
+            This is a resource that has a lot of potential, but currently does not include a full lesson plan. We consider this activity to be 
+            <b>primed for STEM Education</b> and we believe it could be creatively adapted to fit your classroom needs.
+            <br>
+            If you choose to work with this activity we'd love to collect some information on how it goes! 
+            This will help us cultivate and improve the activities on this page and assist teachers who want 
+            to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> 
+            to provide us with feedback or leave a comment on this activity.</p>
+        </div>
+
+        <div id="adapt-lightbox-template">
+            <span class="*class"><a href="#" target="_blank" data-featherlight="#@id">title</a></span>
+            <div style="display: none"><div id="@id" style="padding: 10px;"><div class="header"><img src="./s/adapt-icon.png"><h3>Thank you for choosing one of our activities for adaptation!</h3></div>
+            <br>
+            This is a resource that we believe can be helpful, but currently does include a full lesson plan. We consider this activity to be <b>primed for CS Ed</b> and we believe it could be creatively adapted to fit your classroom needs. You can find the original activity page at the link below.
+            <div style="padding-top: 1em"><span><a target="_blank" href="*link">title</a></span></div>
+                <br>
+                If you choose to work with this activity we'd love to collect some information on how it went! This will help us cultivate and improve the activities on this page and assist teachers who want to use this activity in the future. Please <a href="https://www.whitemountainscience.org/resource-table-contact-form">click here</a> to provide us with feedback.
+                </div>
+            </div>
+        </div>
+        </div>
+    </body>
+</html>
