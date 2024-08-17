@@ -121,18 +121,20 @@ function _getResults(url, data) {
     TODO: expand exception handling to include other cases.
 */
 function _safeParse(data) {
+    console.log("data: ", data);
     try {
         Array.prototype.push.apply(all_results, JSON.parse(data));
     } catch (err) {
-        // console.log('parse failed, attempting push', err);
+        console.log('parse failed, attempting push', err);
         try {
             Array.prototype.push.apply(all_results, data);
-            // console.log('parsed straight json');
+            console.log('parsed straight json');
         } catch {
-            // console.log('cannot parse search results', err);
+            console.log('cannot parse search results', err);
             return false;
         }
     }
+    console.log("all results: ", all_results);
     _extraParse();
     return true;
 }

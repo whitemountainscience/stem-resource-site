@@ -2,6 +2,13 @@
 // Add a graderange to each activity that JS can interpret
 
 const API_KEY = 'AIzaSyDbRcX5JRaYe9lpuiLLS_4tFMHBaRGFVF8';
+const SPREADSHEET_ID = '1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I';
+const RANGE = 'Sheet1!A:O';
+const all_results = [];
+const fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
+
+// TODO: add POST to google sheets for comments, decide on approval system
+const ALLOW_COMMENTS = false;
 
 $(document).ready(function(){
     initClient();
@@ -19,7 +26,6 @@ $(document).ready(function(){
         $('#materials-filter').children().prop('checked', false);
     });
     _fixTabIndex();
-    renderPagesGoogle();
 });
 $(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
 
@@ -29,39 +35,78 @@ function initClient() {
     console.log('init');
     gapi.load('client', loadSheetsApi);
 }
+
 function loadSheetsApi() {
     gapi.client.setApiKey(API_KEY);
     return gapi.client.load('https://sheets.googleapis.com/$discovery/rest?version=v4')
         .then(() => {
-            console.log("gapi loaded successfully")
+            console.log("gapi loaded successfully");
+            renderPages();
         }, (error) => {
             console.error('Error loading GAPI client for API', error);
         });
 }
+
+
+
 /*
-    Load all activities into the table as soon as the page loads
-    DEPRECATED: same can be achieved using renderPages()
+    Obtain search results and cache them locally, displaying pages one at a time
 */
-function initialLoad() {
-    // var url = "https://wmsinh.org/airtable";
-    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
-    var query = "NOT({Resource Name}='')";
-    var page_size = 50;
-    // var search_results = [];
+function renderPages() {
+    let timer = Date.now();
+    let query_string = _getQueryString();
+    let page_size = parseInt($('#results-per-page').val());
 
     _displayLoading(true);
-    $('.grid-container').show();
-    
-    _getResults(url, {query: query}).done(function(data, status, jqXHR) {
-        if(!_safeParse(data, search_results))
-            return _handleSearchFail();
-        _manageTableLocal(search_results, page_size);
-        _renderFeatures(search_results);
-        _displayLoading(false);
-        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
-        $("html, body").animate({scrollTop: '320'}, 600);
-    });
+    $('.grid-container').show()
+
+    if(all_results.length > 0) {
+        let search_results = _localSearch();
+        _displayResults(search_results, page_size);
+        console.log("Render results time: ", Date.now() - timer);
+    } else {
+        gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: RANGE,
+        }).then((response) => {
+            console.log('resp ', response);
+            const range = response.result;
+            if (range.values && range.values.length > 0) {
+                if(!parseGoogle(range.values))
+                    return _handleSearchFail();
+                _displayResults(all_results, page_size);
+                console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+            } else {
+                console.log('No data found.');
+            }
+        }, (response) => {
+            console.error(response.result.error.message);
+        });
+    }
 }
+
+const parseGoogle = (data) => {
+        const headers = data[0]; // First array contains the headers
+        try {
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                const obj = {};
+        
+                headers.forEach((header, index) => {
+                    obj[header] = row[index] || ""; // Assign value or empty string if undefined
+                });
+        
+                all_results.push(obj);
+            }
+        } catch(error) {
+            console.error(error);
+            return false;
+        }
+    
+        return true;
+}
+
+
 
 /*
     Manage locally stored search results. Update sorting, meta data, and buttons
@@ -88,221 +133,65 @@ function _manageTableLocal(search_results, page_size, page=0, build=true) {
     $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
 }
 
-/*
-    Add 3 features to the top of the page. 
-    For now these can be any activities with thumbnails in the base.
-    @private
-    TODO: streamline Airtable query to return fewer features to choose from (e.g. filter by rating)
-    **may be DEPRECATED if we keep initalLoad()
-*/
-function _setupFeatures() {
-    var search_results = [];
-    // var url = "https://wmsinh.org/airtable?query=AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))";
-    // var url = "https://wmsinh.org/airtable?query=NOT({Resource Name}='')";
-    // var url = "https://us-central1-sigma-tractor-235320.cloudfunctions.net/http-proxy";
-    var query = "AND(NOT({Thumbnail} = ''), NOT(Find('incomplete', Tags)))";
-
-
-    $('.grid-container').show();
-
-    _getResults(url, {query: query}).done(function(data, status) {
-        if(!_safeParse(data, search_results))
-            return _handleSearchFail();
-        feature_list = _buildFeatureList(search_results);
-        // console.log('building from ' + feature_list.length + ' features');
-        _buildFeatures(feature_list);
-        console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
-    });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*                        DEPRECATED                  */
 
 /*
-    Render STEM Resource table based on search parameters
-    Generate a query and send it to the API proxy on our Linode
-    (wmsinh.org), then handle the response
-*/
-function renderTable() {
-    _clearTable();
-    var query_string = _getQueryString();
-    // if(query_string == 'AND)')
-    //     return;
-    // console.log('filter by formula: ' + query_string);
-    $('.grid-container').show();
-    var search_results = [];
-    var url = "https://wmsinh.org/airtable?query=" + query_string;
-    // var url = "http://localhost:5000/airtable?query=" + query_string;
-    $.ajax({
-        type: 'GET',
-        headers: {'Access-Control-Allow-Origin': '*'},
-        url: url
-    }).done(function(data, status) {
-        search_results=JSON.parse(data);
-        _renderFeatures(search_results);
-        if(!_sortResults(search_results))
-            _buildTable(search_results);
-        document.querySelector('.features').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
-    });
-}
-
-
-// var Airtable = require('airtable');
-// Airtable.configure({
-//     endpointUrl: 'https://api.airtable.com',
-//     apiKey: WRITE_API_KEY
-// });
-// var base = Airtable.base('app2FkHOwb0jN0G8v');
-/*
-    The original renderTable() used the Airtable JS class (above) to get
-    and update records from the base. As of 1/29/20 this funcitonality
-    has been moved to the server (wmsinh.org) in order to protect our API key
-*/
-function renderTableDEPRECATED() {
-    _clearTable();
-    var query_string = _getQueryString();
-    if(query_string == 'AND)')
-        return;
-    console.log('filter by formula: ' + query_string);
-    $('.grid-container').show();
-    var search_results = [];
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: query_string
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        records.forEach(function(record) {
-            search_results.push(record.fields);
-        });
-        _renderFeatures(search_results);
-        _buildTable(search_results);
-        document.querySelector('.features').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
-    });
-}
-
-/*
-    Create a ligthbox similar to the featherlight plugin
-    Eventually we want to minimize are use of dependencies, including
-    Featherlight.JS
-*/
-function _addLightboxAUTHOR(resource, index) {
-    var html_template = `<div class='ligthbox-grid' id='*id' hidden>
-            <a target='_blank' href='*link'>*img<span align='center'><h3>*title</h3><span></a>
-            *info
-        </div>`;
-    var author_info = "<a target='_blank' href='" + resource["Source Link"] + "'>" + resource.Source + "</a>";
-
-    html_template = html_template.replace('*id', 'resource' + index);
-    // console.log('building img with ' + resource.Thumbnail[0].url);
-    if(resource.Thumbnail != undefined) 
-        html_template = html_template.replace('*img',"<img class='lightbox' src='" + resource.Thumbnail[0].url + "'>");
-    html_template = html_template.replace('*title', resource["Resource Name"]);
-    html_template = html_template.replace('*info', "This resource was created by " + author_info + " and has the following keyword tags: " + resource.Tags);
-    $('.grid-container').append(html_template);
-}
-
-
-/*
-    Create DOM elements for the features to live in
+    Parent function for rendering the drop down menus at the top of the table
+    Populate each menu with the options available in the activities array
     @private
 */
-function _setupFeatureElemnts() {
-    $('#load-div').after(`
-    <span id="content"> </span>
-    <section id="feature-container">
-      <br /><h3>Featured Activities:</h3><br />
-      <div class="features">
-        <div class="featured-activity" id="featurediv1"></div>
-        <div class="featured-activity" id="featurediv2"></div>
-        <div class="featured-activity" id="featurediv3"></div>
-      </div>
-    </section>
-    <br />`);
+function _renderSelects() {
+    subjects = ["Science", "Engineering", "Math", "Social Studies", "Language Arts", "Computer Science",  "Music", "Visual Arts", "Physical Education"];
+    _renderSelect("#subject","Subject", subjects);
+    // _renderGradeSelect();
+    _renderExperienceSelect();
 }
 
+/*
+    Add options to a dropdown menu
+    @param {string} id - HTML id of the dropdown to create
+    @param {string} key - JSON key in the Activity object that corresponds to the options for this menu
+    @private
+*/
+function _renderSelect(id, key, data) {
+    var select_options = $(id).children().toArray().map(i => i.innerHTML);
+    var new_options = [];
+    data.forEach(item => new_options.push(item));
+
+    $(id).append(
+        $.map(new_options, function(item) {
+            return '<option value="' + item + '">' + item + '</option>';
+        }).join());
+}
+
+/*
+    Add options to the experience level dropdown menu
+    Give users optiosn for beginner, intermediate, advanced
+    @private
+*/
+function _renderExperienceSelect() {
+    var grade_options = ['Early Learner','Beginner','Intermediate','Advanced'];
+    $('#experience').append(
+        $.map(grade_options, function(item) {
+            return '<option value="' + item + '">' + item + '</option>';
+        }).join());
+}
 
 /*
     Start a new search if the user presses "Enter" after typing in the search box.
     With the new (non-datatables) implementation this could also be handled by
     making the search bar part of a form with a Submit button
-    @private
 */
-// function _handleSearch() {
-//     $('input[type="search"]').on('keydown', function(e) {
-//         if (e.which == 13) {
-//             renderTable();
-//         }
-//     });
-// }
-/*
-    Trigger an event when stars are clicked in order to post a new rating to Airtable
-    @param {array} search_results - list of resources returned by Airtable from a user-generated search
-    @private
-*/
-// function _postRatingsDEPRECATED(search_results) {
-//     $('.star').click(function() {
-//         var name = $(this).parent().attr('id');
-//         var rating = $(this).attr('id').split('star')[1];
-//         if(confirm("Do you want to post a rating of " +rating+"/5 to "+name+"?")) {
-//             var resource = search_results.find(x => x["Resource Name"] == name);
-//             var votes = (resource.Votes == undefined ? 0 : resource.Votes);
-//             var new_rating = (resource.Rating*votes + parseInt(rating))/(++votes);
-//             if(resource.Rating == undefined) 
-//                 new_rating = parseInt(rating);
-//             console.log('posting rating of ' + new_rating + ' based on ' + votes + ' votes');
-//             base('Activities').update([
-//                 {
-//                     "id": resource.id,
-//                     "fields": {
-//                         "Rating": new_rating,
-//                         "Votes": votes
-//                     }
-//                 }]);
-//         }
-//     });
-// }
-
-/*
-// Code to query airtable directly instead of by pinging the Linode
-    base('Activities').select({
-        view: 'Grid view',
-        filterByFormula: query_string
-    }).firstPage(function(err, records) {
-        if (err) { console.error(err); return; }
-        records.forEach(function(record) {
-            search_results.push(record.fields);
-        });
-        renderFeatures(search_results);
-        _buildTable(search_results);
-        document.querySelector('.features').scrollIntoView({ 
-          behavior: 'smooth' 
-        });
+function _handleSearch() {
+    $('input[type="search"]').on('keydown', function(e) {
+        if (e.which == 13) {
+            $('#search').click();
+        }
     });
-*/ 
+}
+
+
+
+
+
+
+

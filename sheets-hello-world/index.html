@@ -17,6 +17,7 @@
         const SPREADSHEET_ID = '1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I';
         const RANGE = 'hello-world!A1';  // e.g., 'Sheet1!A1'
 
+        // load from sheets
         function loadSheetsApi() {
             gapi.client.setApiKey(API_KEY);
             return gapi.client.load('https://sheets.googleapis.com/$discovery/rest?version=v4')
