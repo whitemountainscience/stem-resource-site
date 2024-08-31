@@ -62,7 +62,8 @@ const renderPages = () => {
         let search_results = table.localSearch();
         table.displayResults(search_results, false);
         doneLoading();
-        manageLocal(search_results, page_size);
+        manageLocal(page_size);
+        table.sortResults();
         console.log("Render results time: ", Date.now() - timer);
     } else {
         gapi.client.sheets.spreadsheets.values.get({
@@ -75,7 +76,8 @@ const renderPages = () => {
                     return handleSearchFail();
                 table.displayResults(all_results, true);
                 doneLoading();
-                manageLocal(all_results, page_size);
+                manageLocal(page_size);
+                table.sortResults();
                 console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
             } else {
                 console.log('No data found.');
@@ -153,7 +155,9 @@ const displayLoading = (loading) => {
     @param {boolean} build - defaults to true, false means initial build has already happened
     @private
 */
-const manageLocal = (search_results, page_size, page=0, build=true) => {
+// const manageLocal = (search_results, page_size, page=0, build=true) => {
+const manageLocal = (page_size, page=0, build=true) => {
+    const search_results = table.searchResults;
     var start = page*page_size;
     var end = Math.min((page+1)*page_size, search_results.length);
     this_page = search_results.slice(start, end); // change this to default first page
@@ -165,9 +169,7 @@ const manageLocal = (search_results, page_size, page=0, build=true) => {
         table.displayMetaData(this_page, page_size, page, search_results.length);
     }
     createLocalButtons(search_results, page_size, page);
-    table.sortResults(false);
-    $('.item-header i').click(() => {manageLocal(search_results, page_size, page)});
-    $('#results-per-page').unbind('change').change(function() {changePageLengthLocal(start, search_results)});  
+    $('#results-per-page').unbind('change').change(( ) => changePageLengthLocal(start, search_results));
 }
 
 
@@ -189,7 +191,7 @@ const createLocalButtons = (search_results, page_size, page=0) => {
 
     if(next_page) 
         $('.next-page').click(() => {
-            manageLocal(search_results, page_size, page+1);
+            manageLocal(page_size, page+1);
             document.querySelector('#feature-container').scrollIntoView({ 
                 behavior: 'smooth' 
             });
@@ -197,7 +199,7 @@ const createLocalButtons = (search_results, page_size, page=0) => {
 
     if(last_page) 
         $('.last-page').click(() => {
-            manageLocal(search_results, page_size, page-1);
+            manageLocal(page_size, page-1);
             document.querySelector('#feature-container').scrollIntoView({ 
                 behavior: 'smooth' 
             });

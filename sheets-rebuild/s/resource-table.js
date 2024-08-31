@@ -138,9 +138,7 @@ class ResourceTable {
         @param {int} index - index of the resource in the features carousel
     */
     addFeatureComments(resource, index) {
-        // var comments = "";
         var id = '#feature'+index;
-        // var comments = $('#comment-template .comment-box').html();
         var element = $('#feature-comment-template').html().replace(/@index/g, index);
         var form_id = '.featherlight-inner #feature-comment-form'+index;
         $(id).append(element);
@@ -178,7 +176,6 @@ class ResourceTable {
             var user = $('.featherlight-inner ' + user_id).val();
             user = (user == "" ? "Anonymous" : user);
             if(comment != '') {
-                var formatted_comment = '["' + user + '", "' + comment + '"]';
                 console.log('posting comment: '+ comment +' (not yet supported)');
                 // $.ajax({
                 //     type: 'POST',
@@ -205,8 +202,6 @@ class ResourceTable {
         Call helper to build ordered list of relevant features 
         based on ratings and other criteria.
         @param {array} search_results - list of activites returned based on a user search
-
-        TODO: Refine selection criteria, limit duplicate Source
     */
     renderFeatures() {
         this.buildFeatureList();
@@ -257,7 +252,6 @@ class ResourceTable {
         @param {list} search_results - list of resource objects returned from airtable search
         @param {int} max - max number of features to return
         @returns {list} feature_list - featured activities sorted with most relevant towards the top
-        @private
     */
     buildFeatureList() {
         // draw from activities from favorite sources or tagged as favorites
@@ -279,53 +273,39 @@ class ResourceTable {
         Sort search results by field values. Event triggered when user clicks an 
         arrow next to one of the column headers
         @param {array} search_results - activities returned by Airtable
-        @returns {boolean} true if table was built from existing sort, false if no build happens
-        @private
-        TODO: we could avoid calling this with every search by keeping a permanent reference to
-            search_results
     */
-    sortResults(build=true) {
-        $('.item-header i').unbind('click').click((e) => {
+    sortResults() {
+        $('.item-header i').click((e) => {
             const clickedElement = $(e.currentTarget);
             const ascending = clickedElement.attr('class') === 'up' ? true : false;
             const field = clickedElement.parent().attr('id');
 
-            console.log('sorting by ' + field + ' with build ' + build);
             if(field == "activity")
-                this.sortText(this.searchResults, "Resource Name", ascending);
+                this.sortText("Resource Name", ascending);
             if(field == "author")
-                this.sortText(this.searchResults, "Source", ascending);
+                this.sortText("Source", ascending);
             if(field == "time")
-                this.sortTime(this.searchResults, ascending);
+                this.sortTime(ascending);
             if(field == "experience")
-                this.sortExperience(this.searchResults, ascending);
+                this.sortExperience(ascending);
             if(field == "subject")
-                this.sortText(this.searchResults, "Subject", ascending)
-            if(field == "rating")
-                this.sortRating(this.searchResults, ascending);
-            if(build) {
-                this.clear();
-                this.build(this.searchResults);
-            }
+                this.sortText("Subject", ascending)
+
+            this.clear();
+            this.build(this.searchResults);
 
             $('i').css('border-color', 'black');
             $('i').removeAttr('alt');
             clickedElement.css('border-color', 'green');
             clickedElement.attr('alt', 'selected');
         });
-        // if sort exists from previous search apply it to this one
-        $('i[alt="selected"]').click();
-        if($('i[alt="selected"]').length)
-            return true;
-        else
-            return false;
     }
 
 
 
 
     ////////////////////////////// SORT FUNCTIONS ////////////////////////////////////////
-    /* Used for sorting resources based on field values. Called by _sortResults()   */
+    /* Used for sorting resources based on field values. Called by sortResults()   */
 
     /*
         Sort results by text field in alphabetical order
@@ -334,12 +314,11 @@ class ResourceTable {
         @param {string} field - resource field key to sort by
         @param {boolean} ascending - true = a to z, false = z to a
     */
-    sortText(search_results, field, ascending) {
+    sortText(field, ascending) {
         if(ascending)
-            search_results.sort((a, b) => a[field].localeCompare(b[field]));
+            this.searchResults.sort((a, b) => a[field].localeCompare(b[field]));
         else
-            search_results.sort((a, b) => b[field].localeCompare(a[field]));
-        return search_results;
+            this.searchResults.sort((a, b) => b[field].localeCompare(a[field]));
     }
 
     /*
@@ -349,8 +328,8 @@ class ResourceTable {
 
         TODO: how well do we want to handle edge cases of 1h00+, 1-2 hours, etc.?
     */
-    sortTime(search_results, ascending) {
-        search_results.sort(function(a, b) {
+    sortTime(ascending) {
+        this.searchResults.sort((a, b) => {
 
             var a_time = parseFloat(a.Duration.replace('h','.'));
             var b_time = parseFloat(b.Duration.replace('h','.'));
@@ -366,9 +345,9 @@ class ResourceTable {
         @param {array} search_results - Airtable activities based on search options
         @param {boolean} ascending - true = low to high, false = high to low
     */
-    sortExperience(search_results, ascending) {
+    sortExperience(ascending) {
         var exp = ["Early Learner","Beginner","Intermediate","Advanced"];
-        search_results.sort(function(a, b) {
+        this,this.searchResults.sort((a, b) => {
             var a_experience = a.Experience.includes(",") ? a.Experience.split(",")[0] : a.Experience;
             var b_experience = b.Experience.includes(",") ? b.Experience.split(",")[0] : b.Experience;
             if(ascending)
