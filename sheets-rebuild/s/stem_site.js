@@ -59,7 +59,6 @@ const renderPages = () => {
     $('.grid-container').show();
 
     if(all_results.length > 0) {
-        console.log("local search");
         let search_results = table.localSearch();
         table.displayResults(search_results, false);
         doneLoading();

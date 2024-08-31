@@ -2,6 +2,8 @@
 //TODO: reorder functions from most- to least-used
 
 
+
+
 /*
     Search locally cached results (all_results) based on filter criteria
     @returns {array} - all resources that match the current search criteria

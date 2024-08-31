@@ -1,5 +1,5 @@
-// TODO: why does searching with no query not return all activities
 class ResourceTable {
+    // TODO: generate materials from list instead of harcoding them
     materials = {
         '#browser': 'Computer w/ Browser',
         '#pen-paper':'Pen and Paper',
@@ -14,12 +14,12 @@ class ResourceTable {
         this.results = results;
         this.allResults = [];
         this.searchResults = [];
+        this.featureList = [];
     }
 
     /*
         Search locally cached results (all_results) based on filter criteria
         @returns {array} - all resources that match the current search criteria
-        @private
     */
     localSearch() {
         let subject = $('#subject').val() != "" ? $('#subject').val() : null;
@@ -29,19 +29,17 @@ class ResourceTable {
         let searchMaterials = [];
         this.getMaterialsLocal(searchMaterials);
 
-        console.log("searching all ", this.allResults.length, " resources");
-        // TODO: refine search text behavior, AND vs OR
         return this.allResults.filter((resource) => 
-                (experience ? resource.Experience.split(', ').includes(experience) : true) &&
-                (self_led ? resource.Tags.includes('self-led') : true) &&
-                (subject ? resource.Subject.split(', ').includes(subject) : true) &&
-                (searchMaterials.includes(resource.Materials.split(', ')[0])) &&
-                (search_string ? resource["Search Text"].includes(search_string) : true)
-            );
+            (experience ? resource.Experience.split(', ').includes(experience) : true) &&
+            (self_led ? resource.Tags.includes('self-led') : true) &&
+            (subject ? resource.Subject.split(', ').includes(subject) : true) &&
+            (search_string ? resource["Search Text"].includes(search_string) : true) &&
+            (searchMaterials.length == Object.entries(this.materials).length || searchMaterials.some((el) => resource.Materials.split(', ').includes(el)))
+        );
     }
 
 
-    // TODO: make this work using html labels instead of assigning strings here
+    // TODO: make this work using html labels instead of assigning strings here?
     getMaterialsLocal(searchMaterials) {
         for (const [key, value] of Object.entries(this.materials)) {
             if($(key).is(':checked'))
@@ -65,10 +63,8 @@ class ResourceTable {
         Called by renderTable()
         @param {array} search_resutls - resources returned by a query search to airtable
         @param {string} env - current deployment denvironment
-        @private
-        TODO: phase out env argument for production
     */
-    build(env='production') {
+    build() {
         var new_elements;
         const grid_item = "<span class='item'>*</span>";
         this.searchResults.forEach((resource, index) => {
@@ -86,7 +82,7 @@ class ResourceTable {
 
             $('#content').append(new_elements);
             this.addLightbox(resource, index);
-            (env == 'dev') ? this.commentSection(resource, index, 'Test Comments') : this.commentSection(resource, index);
+            this.commentSection(resource, index);
         });
     }
 
@@ -98,7 +94,6 @@ class ResourceTable {
         @param {object} resource - resource to render comments for
         @param {int} index - index of the resource for creating IDs
         @param {string} key - field in Airtable to draw comments from
-        @private
     */
     commentSection(resource, index, key='Comments') {
         var element = "<span class='item'>" + $('#comment-template').html() + "</span>";
@@ -129,7 +124,6 @@ class ResourceTable {
             $('#comment-text'+index + ' h4').empty().html('No Comments Yet').after(markup);
         }
 
-        // $(form_id).hide();
         $(text_id).unbind('focus').focus(() => {
             $(this).css('height','90px');
             $(form_id).show();
@@ -142,7 +136,6 @@ class ResourceTable {
         Comment form remains hidden until user clicks on the comment box
         @param {object} resource - activity to build comments section for
         @param {int} index - index of the resource in the features carousel
-        @private
     */
     addFeatureComments(resource, index) {
         // var comments = "";
@@ -171,8 +164,8 @@ class ResourceTable {
         and send it to Airtable
         @param {int} index - index of activity in the table, used to make IDs
         @param {object} resource - resource object to post comment for
-        @private
-        TODO: shorter ID names?
+
+        TODO: decide whether to keep comments, how to moderate; shorter ID names?
     */
     postComment(resource, index, feature = false) {
         // var id = '#feature-post-comment' + index;
@@ -186,16 +179,16 @@ class ResourceTable {
             user = (user == "" ? "Anonymous" : user);
             if(comment != '') {
                 var formatted_comment = '["' + user + '", "' + comment + '"]';
-                console.log('posting comment: '+ comment +' to airtable from user ' + user);
-                $.ajax({
-                    type: 'POST',
-                    data: {
-                        "id": resource.id,
-                        "New Comment": formatted_comment
-                    }
-                }).fail((jqXHR, textStatus, errorThrown) => {
-                    console.log("post comment failed :( \n" + textStatus + ': ' + errorThrown);
-                });
+                console.log('posting comment: '+ comment +' (not yet supported)');
+                // $.ajax({
+                //     type: 'POST',
+                //     data: {
+                //         "id": resource.id,
+                //         "New Comment": formatted_comment
+                //     }
+                // }).fail((jqXHR, textStatus, errorThrown) => {
+                //     console.log("post comment failed :( \n" + textStatus + ': ' + errorThrown);
+                // });
 
                 // Wait for approval on new comments. Show some kind of success message that comment was received
                 var markup_id = '.featherlight-inner ' + (feature ? '#feature-' : '#') + 'comment-text' + index;
@@ -216,13 +209,13 @@ class ResourceTable {
         TODO: Refine selection criteria, limit duplicate Source
     */
     renderFeatures() {
-        const feature_list = this.buildFeatureList();
+        this.buildFeatureList();
 
-        if(feature_list.length == 0)
+        if(this.featureList.length == 0)
             $('#feature-container').hide();
         else {
             $('#feature-container').show();
-            this.buildFeatures(feature_list);
+            this.buildFeatures();
         }
     }
 
@@ -231,10 +224,9 @@ class ResourceTable {
         Right now the first one always comes from a list of 'best authors' and the other two are random
         @param {array} features - a list of activities that could be used as features. Currently this
             is all activities with an "Img URL" field
-        @private
     */
-    buildFeatures(features) {
-        features = features.slice(0,3);
+    buildFeatures() {
+        const features = this.featureList.slice(0,3);
 
         $('.features').empty();
         features.map((resource, i) => {
@@ -261,51 +253,25 @@ class ResourceTable {
 
     /*
         Build an ordered list of featured activities based on search results
-        Most relevant/ highly rated activities sort towards the top of list.
-        TODO: Continue to refine criteria for sorting/ filtering
-                Ideally we end up with one sort() and one filter()
 
         @param {list} search_results - list of resource objects returned from airtable search
         @param {int} max - max number of features to return
         @returns {list} feature_list - featured activities sorted with most relevant towards the top
         @private
-        TODO: time permitting, improve selection algorithm to create a 'short list' of best features
-            for user search, then randomize
     */
-    buildFeatureList(max=100) {
-        var feature_list = [];
-        var top_features = [];
+    buildFeatureList() {
+        // draw from activities from favorite sources or tagged as favorites
+        this.featureList = this.searchResults.filter((resource) => resource.Thumbnail && !resource.Tags.includes('incomplete'));
 
         // randomize the results
-        this.searchResults.sort(() => Math.random() - 0.5);
-
-        this.searchResults.forEach(function(resource) {
-            if(resource.Thumbnail && !resource.Tags.includes('incomplete')) {
-                // save Top Features from favorite sources
-                if(fav_sources.includes(resource.Source) || resource.Tags.includes('favorite'))
-                    top_features.push(resource);
-
-                // push all other items to list that have a thumbnail and are not incomplete
-                else 
-                    feature_list.push(resource);
-            }
-        });
+        this.featureList.sort(() => Math.random() - 0.5);
 
         // no duplicate sources next to each other
-        feature_list = feature_list.filter(function(resource, i, feature_list) {
+        this.featureList = this.featureList.filter((resource, i, list) => {
             if(i == 0)
                 return true;
-            return !(resource.Source == feature_list[i-1].Source);
+            return !(resource.Source == list[i-1].Source);
         });
-
-        // add Top Feature to beginning (just one for now)
-        if(top_features.length)
-            feature_list.unshift(top_features[0]);
-
-        if(max < feature_list.length)
-            feature_list = feature_list.slice(0, max);
-
-        return feature_list;
     }
 
 
@@ -341,6 +307,7 @@ class ResourceTable {
                 this.clear();
                 this.build(this.searchResults);
             }
+
             $('i').css('border-color', 'black');
             $('i').removeAttr('alt');
             clickedElement.css('border-color', 'green');
@@ -366,7 +333,6 @@ class ResourceTable {
         @param {array} search_results - Airtable activities based on search options
         @param {string} field - resource field key to sort by
         @param {boolean} ascending - true = a to z, false = z to a
-        @private
     */
     sortText(search_results, field, ascending) {
         if(ascending)
@@ -380,7 +346,7 @@ class ResourceTable {
         Sort results by the duration of the activity
         @param {array} search_results - Airtable activities based on search options
         @param {boolean} ascending - true = short to long, false = long to short
-        @private
+
         TODO: how well do we want to handle edge cases of 1h00+, 1-2 hours, etc.?
     */
     sortTime(search_results, ascending) {
@@ -399,7 +365,6 @@ class ResourceTable {
         Sort results by the experience required for an activity
         @param {array} search_results - Airtable activities based on search options
         @param {boolean} ascending - true = low to high, false = high to low
-        @private
     */
     sortExperience(search_results, ascending) {
         var exp = ["Early Learner","Beginner","Intermediate","Advanced"];
@@ -414,11 +379,8 @@ class ResourceTable {
     }
 
 
-
-
     /*
         Clear the table from previous search results
-        @private
     */
     clear() {
         $('.item').remove();
@@ -431,11 +393,8 @@ class ResourceTable {
         results per page, current page number, etc.
         @param {array} search_results - records returned by airtable
         @param {int} page_size - max number of records per page
-        @private
     */
     displayMetaData(search_results, page_size, page_num=0, num_results=search_results.length) {
-        console.log('display meta for page num ' + page_num +', page size ' + page_size + ', num results ' + num_results);
-
         $('#results-meta').empty();
         if(num_results == 0)
             $('#results-meta').html("We're sorry but your search did not return any results.");
@@ -479,27 +438,24 @@ class ResourceTable {
         if(resource["Tags"].includes("incomplete"))  
             html_template = html_template.slice(0,html_template.indexOf('</div>')) +  this.adaptLightbox();
         $('#content').append(html_template);
-        if(resource["Youtube URL"] != undefined)
+        if(resource["Youtube Url"] != '')
             this.addVideo(resource, '#resource' + index);
     }
 
     /*
-        Add a video streaming option if the Youtube URL field is defined for this resource
-        v1: embed with HTML5 <video> tag. Evaluate for compatibility
+        Add a video streaming option if the Youtube Url field is defined for this resource
+
         @param {object} resource - resource to render video for
         @param {string} id - element ID to add video
-        @private
     */
     addVideo(resource, id) {
-        console.log('prepending video to ' + id + ' a');
         var video_template = $("#lightbox-video-template").html();
-        video_template = video_template.replace('*src', 'src="' + resource["Youtube URL"] + '"');
-        var $video = $(id + ' a').first().append(video_template);
+        video_template = video_template.replace('*src', 'src="' + resource["Youtube Url"] + '"');
+        $(id + ' a').first().append(video_template);
     }
 
     /*
         Add the Adaptation Activity template to an activity lightbox.
-        @private
     */
     adaptLightbox() {
         return $('#adapt-text-template').html() + '</div>';
