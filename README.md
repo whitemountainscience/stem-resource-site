@@ -21,6 +21,7 @@ Documentation for the [STEM Resource Site](https://whitemountainscience.org/stem
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#organization">Organization</a></li>
     <li><a href="#resources">Resources</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -34,9 +35,11 @@ Documentation for the [STEM Resource Site](https://whitemountainscience.org/stem
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-<!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
-
-This page is designed as a resource for educators to easily find activities for teaching STEM subjects. The goal is for educators to be able to add and comment on activities to help with crowdsourcing.
+This page is designed as a resource for educators to easily find activities for teaching STEM subjects. Some objectives of the project are:
+- Educators can easily find STEM activities on the [WMSI site page](https://whitemountainscience.org/stem-resource-site) by searching and filtering a curated list.
+- WMSI staff can easily maintain the list of activities and their properties in a Google Sheet, and store an image for each activity in Google Cloud Storage
+- Educators external to WMSI can add activites to the sheet and potentially comment or like the activities that they find most useful (comments and likes not yet implemented)
+- This repo can be modified by WMSI staff and potentially external contributors to improve the page
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -44,10 +47,11 @@ This page is designed as a resource for educators to easily find activities for 
 
 ### Built With
 
-* Google Cloud Console
-* Google Sheets API
+* [Google Cloud Platform](https://console.cloud.google.com/welcome?project=resource-table) for storing and serving up images
+* [Google Sheets API](https://developers.google.com/sheets/api/guides/concepts) to allow for easy storage / editing of activities in a [Google Sheet](https://docs.google.com/spreadsheets/d/1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I)
+* [Featherlight](https://noelboss.github.io/featherlight/) for lightboxes / modals
+* [http-server](https://www.npmjs.com/package/http-server) for building the site locally
 * [![JQuery][JQuery.com]][JQuery-url]
-* Featherlight CSS
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -89,10 +93,23 @@ You'll need the following.
    cd stem-resource-site
    http-server
    ```
-4. Currently the Google Sheets version of this project is being build in /sheets-rebuild. You can view the page at http://127.0.0.1:8080/sheets-rebuild/
+  * By default http-server runs on localhost port 8080. If you want to use a different port or explore other options, check out the link above under <a href="#resources">Resources</a>
+4. Choose a page / version of the site to run locally:
+  - The [live version of this page](https://whitemountainscience.org/stem-resource-site) using Google Sheets can be found in /sheets-rebuild. After starting the local server, you can view the page at http://localhost:8080/sheets-rebuild/
+  - To work with the original, Airtable-based version of the site go to http://localhost:8080/airtable-version/
+  - If you want to see a basic example of the Google Sheets API in action go to http://localhost:8080/sheets-hello-world/
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- Site Files / Organization -->
+## Organization
+
+Since the wmsi site is built with Squarespace, the local organization of files for each version of the site mirrors the file structure that Squarespace sites use. Basically each site version folder (e.g. sheets-rebuild) has an index.html and a folder named ```/s/``` with CSS and JS files as well as a few images.
+- ```index.html``` contains the HTML which can be found in the Code block on the [Squarespace STEM Resource page](https://whitemountainscience.org/stem-resource-site). If you make any changes to this file and want them to appear on the site, be sure to copy the html over by editing the Code block on that page.
+- ```stem_site.js``` and ```resource-table.js``` contain all of the javascript code for building and displaying the table. As part of refactoring this site (August - October 2024) most of the table-specific functions appear within the ResourceTable class in resource-table.js
+- The airtable-version of the site uses ```shared_functions.js``` instead of ```resource-table.js```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- Resources -->
 ## Resources
