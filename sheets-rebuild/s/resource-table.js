@@ -480,18 +480,18 @@ class ResourceTable {
     html_template = html_template.replace("*class", "modal modal-grid");
     html_template = html_template.replace("*link", resource["Resource Link"]);
     html_template = html_template.replace("*title", resource["Resource Name"]);
-    if (resource["Youtube Url"] != "")
-      this.addVideo(resource, "#resource" + index);
-    else if (resource.Thumbnail)
-      html_template = html_template.replace(
-        "*img",
-        'src="' + resource.Thumbnail + '"'
-      );
-    else
-      html_template = html_template.replace(
-        "*img",
-        'src="' + this.placeholderImg + '"'
-      );
+    if (resource["Youtube Url"] == "") {
+      if (resource.Thumbnail)
+        html_template = html_template.replace(
+          "*img",
+          'src="' + resource.Thumbnail + '"'
+        );
+      else
+        html_template = html_template.replace(
+          "*img",
+          'src="' + this.placeholderImg + '"'
+        );
+    }
 
     html_template = html_template.replace(
       "*description",
@@ -501,6 +501,8 @@ class ResourceTable {
     html_template = html_template.replace("*tags", resource.Tags);
 
     $("#content").append(html_template);
+    if (resource["Youtube Url"] != "")
+      this.addVideo(resource, "#resource" + index);
   }
 
   addAdaptModal(resource, index) {
@@ -529,11 +531,10 @@ class ResourceTable {
       @param {string} id - element ID to add video
   */
   addVideo(resource, id) {
+    console.log(resource);
     var video_template = $("#modal-video-template").html();
-    video_template = video_template.replace(
-      "*src",
-      'src="' + resource["Youtube Url"] + '"'
-    );
+    video_template = video_template.replace("*src", resource["Youtube Url"]);
+    console.log("appending ", video_template, " to ", id + " a");
     $(id + " a")
       .first()
       .append(video_template);

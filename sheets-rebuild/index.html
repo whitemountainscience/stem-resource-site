@@ -227,64 +227,42 @@
         <div id="*id" class="*class">
           <div class="modal-content" id="*id">
             <span class="close">&times;</span>
-            <div class="content">
-              <a target="_blank" href="*link">
-                <div class="modal-image">
-                  <img *img />
-                </div>
-                <span style="text-align: center">
-                  <h3>*title</h3>
-                </span>
-              </a>
-              <br />
-              <span style="text-align: center">*description</span><br />
-              <hr />
-              <span
-                >This activity requires the following materials:
-                *materials</span
-              ><br />
-              <span>Keyword tags: *tags</span>
-            </div>
+            <!-- <div class="content"> -->
+            <a target="_blank" href="*link">
+              <div class="modal-image">
+                <img *img />
+              </div>
+              <span style="text-align: center">
+                <h3>*title</h3>
+              </span>
+            </a>
+            <br />
+            <span style="text-align: center">*description</span><br />
+            <hr />
+            <span
+              >This activity requires the following materials: *materials</span
+            ><br />
+            <span>Keyword tags: *tags</span>
+            <!-- </div> -->
           </div>
         </div>
       </div>
 
-      <!-- Container -->
+      <!-- Youtube Video Container -->
       <div id="modal-video-template">
-        <div class="modal-video">
-          <iframe *src allowfullscreen></iframe>
+        <div class="modal-image">
+          <iframe src="*src" allowfullscreen></iframe>
         </div>
       </div>
 
-      <div id="adapt-text-template">
-        <hr />
-        <h4>Thanks for choosing an Activity for Adaptation!</h4>
-        <br />
-        <p>
-          <img class="adapt" src="./s/adapt-icon.png" />
-          This is a resource that has a lot of potential, but currently does not
-          include a full lesson plan. We consider this activity to be
-          <b>primed for STEM Education</b> and we believe it could be creatively
-          adapted to fit your classroom needs.
-          <br />
-          If you choose to work with this activity we'd love to collect some
-          information on how it goes! This will help us cultivate and improve
-          the activities on this page and assist teachers who want to use this
-          activity in the future. Please
-          <a
-            href="https://www.whitemountainscience.org/resource-table-contact-form"
-            >click here</a
-          >
-          to provide us with feedback or leave a comment on this activity.
-        </p>
-      </div>
-
+      <!-- Activity Title / Link for activities that require adaptation (tagged as incomplete) -->
       <div id="adapt-modal-title">
         <span class="*class">
           <a href="#" target="_blank" data-modal="#@id">title</a>
         </span>
       </div>
 
+      <!-- Modal template for activities that require adaptation -->
       <div id="adapt-modal-template">
         <div id="*id" class="*class">
           <div class="modal-content" id="*id">
@@ -318,37 +296,6 @@
           </div>
         </div>
       </div>
-      <!-- <div id="adapt-modal-template">
-        <span class="*class"
-          ><a href="#" target="_blank" data-modal="#@id">title</a>
-        </span>
-        <div style="display: none">
-          <div id="@id" style="padding: 10px">
-            <div class="header modal-image">
-              <img src="./s/adapt-icon.png" />
-              <h3>
-                Thank you for choosing one of our activities for adaptation!
-              </h3>
-            </div>
-            <br />
-            This is a resource that we believe can be helpful, but currently
-            does include a full lesson plan. We consider this activity to be
-            <b>primed for CS Ed</b> and we believe it could be creatively
-            adapted to fit your classroom needs. You can find the original
-            activity page at the link below.
-            <div style="padding-top: 1em">
-              <span><a target="_blank" href="*link">title</a></span>
-            </div>
-            <br />
-            If you choose to work with this activity we'd love to collect some
-            information on how it went! This will help us cultivate and improve
-            the activities on this page and assist teachers who want to use this
-            activity in the future. Please
-            <a href="mailto:admin@whitemountainscience.org">send us an email</a>
-            to share any feedback you have.
-          </div>
-        </div>
-      </div> -->
 
       <!-- TODO: Remove comment template, or update to use with new modals and Likes / Comment system -->
       <div id="comment-template">
