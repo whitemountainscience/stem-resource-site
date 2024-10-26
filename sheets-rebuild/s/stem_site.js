@@ -1,114 +1,149 @@
-// TODO: Decide whether to keep just experience or add grade ranges
+// TODO: Could store the API key in Cloud Storage so its more secure
+const API_KEY = "AIzaSyDbRcX5JRaYe9lpuiLLS_4tFMHBaRGFVF8";
 
-const API_KEY = 'AIzaSyDbRcX5JRaYe9lpuiLLS_4tFMHBaRGFVF8';
 // https://docs.google.com/spreadsheets/d/1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I/edit?gid=0#gid=0
-const SPREADSHEET_ID = '1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I';
-const RANGE = 'Sheet1!A:O';
+const SPREADSHEET_ID = "1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I";
+const RANGE = "Sheet1!A:O";
 const all_results = [];
 const fav_sources = ["WMSI", "STEAM Discovery Lab", "NASA", "code.org"];
 
-// TODO: add POST to google sheets for comments, decide on approval system
+// TODO: decide whether to add POST to google sheets for comments, decide on approval system
 const ALLOW_COMMENTS = false;
 const table = new ResourceTable(fav_sources, all_results);
 
+// Once the page loads initialize connection to google sheets, render the table, and finish setting up the page with JQuery
 $(document).ready(() => {
-    initClient();
+  initClient();
 
-    renderSelects();
-    handleSearch();
+  renderSelects();
+  handleSearch();
 
-    $(window).scroll(() => scrollTopButton());
-    $('#scroll-top-btn').click(() => $("html, body").animate({scrollTop: '320'}, 600));
-    $('.grid-container').hide();
-    $('.lds-ring').hide();
-    $('#search').click(() => renderPages());
-    $('#reset').click(() => resetFilters());
-    $('#uncheck-materials').click(() => $('#materials-filter').children().prop('checked', false));
-    fixTabIndex();
+  $(window).scroll(() => scrollTopButton());
+  $("#scroll-top-btn").click(() =>
+    $("html, body").animate({ scrollTop: "320" }, 600)
+  );
+  $(".grid-container").hide();
+  $(".lds-ring").hide();
+  $("#search").click(() => renderPages());
+  $("#reset").click(() => resetFilters());
+  $("#uncheck-materials").click(() =>
+    $("#materials-filter").children().prop("checked", false)
+  );
+  // fixTabIndex();
+  buildModals();
 });
-// $(window).load(() => console.log("Window load time: ", window.performance.timing.domComplete - window.performance.timing.navigationStart));
 
+const buildModals = () => {
+  $(document).on("click", "a[data-modal]", function (e) {
+    e.preventDefault();
+    let modalID = $(this).data("modal").replace("adapt", "resource");
+    $(modalID).fadeIn();
+  });
 
+  // Close modal when the close button is clicked
+  $(document).on("click", ".close", function (e) {
+    $(this).closest(".modal").fadeOut();
+  });
 
+  // Close modal when clicking outside the modal content
+  $(window).click(function (e) {
+    if ($(e.target).hasClass("modal")) {
+      $(".modal").fadeOut();
+    }
+  });
+
+  // Close modal when the Escape key is pressed
+  $(document).keydown(function (e) {
+    if (e.key === "Escape") {
+      $(".modal").fadeOut();
+    }
+  });
+};
+
+// Initialize google sheets API
 const initClient = () => {
-    console.log('init');
-    gapi.load('client', loadSheetsApi);
-}
+  gapi.load("client", loadSheetsApi);
+};
 
-const loadSheetsApi =() => {
-    gapi.client.setApiKey(API_KEY);
-    return gapi.client.load('https://sheets.googleapis.com/$discovery/rest?version=v4')
-        .then(() => {
-            console.log("gapi loaded successfully");
-            renderPages();
-        }, (error) => {
-            console.error('Error loading GAPI client for API', error);
-        });
-}
-
-
+// Load the spreadsheet using the API key, then call renderPages()
+const loadSheetsApi = () => {
+  gapi.client.setApiKey(API_KEY);
+  return gapi.client
+    .load("https://sheets.googleapis.com/$discovery/rest?version=v4")
+    .then(
+      () => {
+        renderPages();
+      },
+      (error) => {
+        console.error("Error loading GAPI client for API", error);
+      }
+    );
+};
 
 /*
     Obtain search results and cache them locally, displaying pages one at a time
 */
 const renderPages = () => {
-    const timer = Date.now();
-    let page_size = parseInt($('#results-per-page').val());
+  const timer = Date.now();
+  let page_size = parseInt($("#results-per-page").val());
 
-    displayLoading(true);
-    $('.grid-container').show();
+  displayLoading(true);
+  $(".grid-container").show();
 
-    if(all_results.length > 0) {
-        let search_results = table.localSearch();
-        table.displayResults(search_results, false);
-        doneLoading();
-        manageLocal(page_size);
-        table.sortResults();
-        console.log("Render results time: ", Date.now() - timer);
-    } else {
-        gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: RANGE,
-        }).then((response) => {
-            const range = response.result;
-            if (range.values && range.values.length > 0) {
-                if(!parseGoogle(range.values))
-                    return handleSearchFail();
-                table.displayResults(all_results, true);
-                doneLoading();
-                manageLocal(page_size);
-                table.sortResults();
-                console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
-            } else {
-                console.log('No data found.');
-            }
-        }, (response) => {
-            console.error(response.result.error.message);
-        });
-    }
-}
+  if (all_results.length > 0) {
+    let search_results = table.localSearch();
+    table.displayResults(search_results, false);
+    doneLoading();
+    manageLocal(page_size);
+    table.sortResults(() => manageLocal($("#results-per-page").val()));
+    // console.log("Render results time: ", Date.now() - timer);
+  } else {
+    gapi.client.sheets.spreadsheets.values
+      .get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: RANGE,
+      })
+      .then(
+        (response) => {
+          const range = response.result;
+          if (range.values && range.values.length > 0) {
+            if (!parseGoogle(range.values)) return handleSearchFail();
+            table.displayResults(all_results, true);
+            doneLoading();
+            manageLocal(page_size);
+            table.sortResults(() => manageLocal($("#results-per-page").val()));
+            // console.log("Initial load time: ", Date.now() - window.performance.timing.navigationStart);
+          } else {
+            console.error("No data found.");
+          }
+        },
+        (response) => {
+          console.error(response.result.error.message);
+        }
+      );
+  }
+};
 
 const parseGoogle = (data) => {
-        const headers = data[0]; // First array contains the headers
-        try {
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                const obj = {};
+  const headers = data[0]; // First array contains the headers
+  try {
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const obj = {};
 
-                headers.forEach((header, index) => {
-                    obj[header] = row[index] || ""; // Assign value or empty string if undefined
-                });
+      headers.forEach((header, index) => {
+        obj[header] = row[index] || ""; // Assign value or empty string if undefined
+      });
 
-                all_results.push(obj);
-            }
-        } catch(error) {
-            console.error(error);
-            return false;
-        }
-    
-        return true;
-}
+      all_results.push(obj);
+    }
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 
+  return true;
+};
 
 /*
     Display a message to users if a search fails. This could have to do with a bad
@@ -116,23 +151,24 @@ const parseGoogle = (data) => {
     @private
 */
 const handleSearchFail = (err) => {
-    displayLoading(false);
-    console.error("search failed with ", err);
-    $('#results-meta').html(`We're sorry but there was an error loading your search.  
+  displayLoading(false);
+  console.error("search failed with ", err);
+  $("#results-meta")
+    .html(`We're sorry but there was an error loading your search.  
                             Please refresh the page and try again. 
                             If the problem persists, click the "Broken Link" button on the bottom right.`);
-}
+};
 
 /*
     Hide the spinner graphic and scroll features into view
     @private
 */
 const doneLoading = () => {
-    displayLoading(false);
-    document.querySelector('#feature-container').scrollIntoView({
-        behavior: 'smooth'
-    });
-}
+  displayLoading(false);
+  document.querySelector("#feature-container").scrollIntoView({
+    behavior: "smooth",
+  });
+};
 
 /*
     Display a spinner graphic to show that results are still loading
@@ -140,11 +176,9 @@ const doneLoading = () => {
     @private
 */
 const displayLoading = (loading) => {
-    if(loading)
-        $('.lds-ring').show();
-    else
-        $('.lds-ring').hide();
-}
+  if (loading) $(".lds-ring").show();
+  else $(".lds-ring").hide();
+};
 
 /*
     Manage locally stored search results. Update sorting, meta data, and buttons
@@ -156,22 +190,22 @@ const displayLoading = (loading) => {
     @private
 */
 // const manageLocal = (search_results, page_size, page=0, build=true) => {
-const manageLocal = (page_size, page=0, build=true) => {
-    const search_results = table.searchResults;
-    var start = page*page_size;
-    var end = Math.min((page+1)*page_size, search_results.length);
-    this_page = search_results.slice(start, end); // change this to default first page
+const manageLocal = (page_size, page = 0, build = true) => {
+  const search_results = table.searchResults;
+  const start = page * page_size;
+  const end = Math.min((page + 1) * page_size, search_results.length);
+  this_page = search_results.slice(start, end);
 
-    if(build) {
-        console.log("building table");
-        table.clear();
-        table.build(this_page);
-        table.displayMetaData(this_page, page_size, page, search_results.length);
-    }
-    createLocalButtons(search_results, page_size, page);
-    $('#results-per-page').unbind('change').change(( ) => changePageLengthLocal(start, search_results));
-}
-
+  if (build) {
+    table.clear();
+    table.build(this_page);
+    table.displayMetaData(this_page, page_size, page, search_results.length);
+  }
+  createLocalButtons(search_results, page_size, page);
+  $("#results-per-page")
+    .unbind("change")
+    .change(() => changePageLengthLocal(start, search_results));
+};
 
 /*
     Attach behavior to Next Page and Last Page buttons using locally stored results
@@ -182,37 +216,33 @@ const manageLocal = (page_size, page=0, build=true) => {
     @param {int} page - current page number
     @private
 */
-const createLocalButtons = (search_results, page_size, page=0) => {
-    var next_page = (page+1)*page_size < search_results.length ? true : false;
-    var last_page = page > 0 ? true : false;
-    // console.log('create buttons with next '+ next_page + ' and last ' + last_page);
-    $('.next-page').unbind('click');
-    $('.last-page').unbind('click');
+const createLocalButtons = (search_results, page_size, page = 0) => {
+  var next_page = (page + 1) * page_size < search_results.length ? true : false;
+  var last_page = page > 0 ? true : false;
+  $(".next-page").unbind("click");
+  $(".last-page").unbind("click");
 
-    if(next_page) 
-        $('.next-page').click(() => {
-            manageLocal(page_size, page+1);
-            document.querySelector('#feature-container').scrollIntoView({ 
-                behavior: 'smooth' 
-            });
-        });
+  if (next_page)
+    $(".next-page").click(() => {
+      manageLocal(page_size, page + 1);
+      document.querySelector("#feature-container").scrollIntoView({
+        behavior: "smooth",
+      });
+    });
 
-    if(last_page) 
-        $('.last-page').click(() => {
-            manageLocal(page_size, page-1);
-            document.querySelector('#feature-container').scrollIntoView({ 
-                behavior: 'smooth' 
-            });
-        });
+  if (last_page)
+    $(".last-page").click(() => {
+      manageLocal(page_size, page - 1);
+      document.querySelector("#feature-container").scrollIntoView({
+        behavior: "smooth",
+      });
+    });
 
-    if(next_page || last_page) 
-        $('#bottom-page-buttons').show();
-    else
-        $('#bottom-page-buttons').hide();
+  if (next_page || last_page) $("#bottom-page-buttons").show();
+  else $("#bottom-page-buttons").hide();
 
-    buttonCss(next_page, last_page);
-}
-
+  buttonCss(next_page, last_page);
+};
 
 /*
     Parent function for rendering the drop down menus at the top of the table
@@ -220,9 +250,19 @@ const createLocalButtons = (search_results, page_size, page=0) => {
     @private
 */
 function renderSelects() {
-    subjects = ["Science", "Engineering", "Math", "Social Studies", "Language Arts", "Computer Science",  "Music", "Visual Arts", "Physical Education"];
-    renderSelect("#subject","Subject", subjects);
-    renderExperienceSelect();
+  subjects = [
+    "Science",
+    "Engineering",
+    "Math",
+    "Social Studies",
+    "Language Arts",
+    "Computer Science",
+    "Music",
+    "Visual Arts",
+    "Physical Education",
+  ];
+  renderSelect("#subject", "Subject", subjects);
+  renderExperienceSelect();
 }
 
 /*
@@ -232,14 +272,18 @@ function renderSelects() {
     @private
 */
 function renderSelect(id, key, data) {
-    var select_options = $(id).children().toArray().map(i => i.innerHTML);
-    var new_options = [];
-    data.forEach(item => new_options.push(item));
+  var select_options = $(id)
+    .children()
+    .toArray()
+    .map((i) => i.innerHTML);
+  var new_options = [];
+  data.forEach((item) => new_options.push(item));
 
-    $(id).append(
-        $.map(new_options, function(item) {
-            return '<option value="' + item + '">' + item + '</option>';
-        }).join());
+  $(id).append(
+    $.map(new_options, function (item) {
+      return '<option value="' + item + '">' + item + "</option>";
+    }).join()
+  );
 }
 
 /*
@@ -248,11 +292,12 @@ function renderSelect(id, key, data) {
     @private
 */
 function renderExperienceSelect() {
-    var grade_options = ['Early Learner','Beginner','Intermediate','Advanced'];
-    $('#experience').append(
-        $.map(grade_options, function(item) {
-            return '<option value="' + item + '">' + item + '</option>';
-        }).join());
+  var grade_options = ["Early Learner", "Beginner", "Intermediate", "Advanced"];
+  $("#experience").append(
+    $.map(grade_options, function (item) {
+      return '<option value="' + item + '">' + item + "</option>";
+    }).join()
+  );
 }
 
 /*
@@ -261,13 +306,12 @@ function renderExperienceSelect() {
     making the search bar part of a form with a Submit button
 */
 function handleSearch() {
-    $('input[type="search"]').on('keydown', function(e) {
-        if (e.which == 13) {
-            $('#search').click();
-        }
-    });
+  $('input[type="search"]').on("keydown", function (e) {
+    if (e.which == 13) {
+      $("#search").click();
+    }
+  });
 }
-
 
 /*
     Alter CSS for page buttons depending on table state
@@ -277,61 +321,47 @@ function handleSearch() {
     @private
 */
 const buttonCss = (next_page, last_page) => {
-    // console.log('modifying button css with next ' + next_page + ' and last ' + last_page);
-    if(next_page) {
-        $('.next-page').css({'cursor': '', 'color': '', 'font-weight': 'bolder'});
-    } else {
-        $('.next-page').unbind('click');
-        $('.next-page').css({'cursor': 'default', 'color': 'grey', 'font-weight': 'inherit'});   
-    }
-    if(last_page) {
-        $('.last-page').css({'cursor': '', 'color': '', 'font-weight': 'bolder'});
-    } else {
-        $('.last-page').unbind('click');
-        $('.last-page').css({'cursor': 'default', 'color': 'grey', 'font-weight': 'inherit'});
-    }
-}
-
-
-
-/*
-    Re-set the tab indexes in lightbox functions so they don't all
-    have tabindex=-1. This is a known bug with featherlight as referenced here:
-    https://github.com/noelboss/featherlight/issues/285
-    TODO: make our own lightboxes to avoid dealing with this
-    @private
-*/
-const fixTabIndex = () => {
-    $.featherlight.defaults.afterOpen = function() {
-        var count = 1;
-        new_lightbox = this;
-        this.$instance.find('input, textarea, button').each(function() {
-            $(this).attr('tabindex', count++);
-        });
-    };
-}
-
+  // console.log('modifying button css with next ' + next_page + ' and last ' + last_page);
+  if (next_page) {
+    $(".next-page").css({ cursor: "", color: "", "font-weight": "bolder" });
+  } else {
+    $(".next-page").unbind("click");
+    $(".next-page").css({
+      cursor: "default",
+      color: "grey",
+      "font-weight": "inherit",
+    });
+  }
+  if (last_page) {
+    $(".last-page").css({ cursor: "", color: "", "font-weight": "bolder" });
+  } else {
+    $(".last-page").unbind("click");
+    $(".last-page").css({
+      cursor: "default",
+      color: "grey",
+      "font-weight": "inherit",
+    });
+  }
+};
 
 /* 
     Reset all filters to their default values
 */
 const resetFilters = () => {
-    $('#subject').val("");
-    $('#experience').val("");
-    $(':checkbox').prop('checked',true);
-    $('#self-led').prop('checked', false);
-    $('input[type="search"]').val("");
-}
+  $("#subject").val("");
+  $("#experience").val("");
+  $(":checkbox").prop("checked", true);
+  $("#self-led").prop("checked", false);
+  $('input[type="search"]').val("");
+};
 
 /*
     Show the Scroll to Top Button when the user scrolls the filters out of view.
 */
 const scrollTopButton = () => {
-    if($(window).scrollTop() > 670)
-        $('.scroll-top').show();
-    else
-        $('.scroll-top').hide();
-}
+  if ($(window).scrollTop() > 670) $(".scroll-top").show();
+  else $(".scroll-top").hide();
+};
 
 ////////////////////////////// PAGE FUNCTIONS ////////////////////////////////////////
 /*
@@ -342,11 +372,10 @@ const scrollTopButton = () => {
     @private
 */
 const changePageLength = (start) => {
-    var page_size = $('#results-per-page').val();
-    var page = Math.floor(start/page_size);
-    console.log('new page length ' + page_size +' and page num ' + page);
-    renderPage(page_size, page);
-}
+  var page_size = $("#results-per-page").val();
+  var page = Math.floor(start / page_size);
+  renderPage(page_size, page);
+};
 
 /*
     Change the number of results displayed per page
@@ -357,8 +386,7 @@ const changePageLength = (start) => {
     @private
 */
 const changePageLengthLocal = (start, search_results) => {
-    var page_size = $('#results-per-page').val();
-    var page = Math.floor(start/page_size);
-    console.log('new page length ' + page_size +' and page num ' + page);
-    _manageTableLocal(search_results, page_size, page);
-}
+  var page_size = $("#results-per-page").val();
+  var page = Math.floor(start / page_size);
+  manageLocal(page_size, page);
+};

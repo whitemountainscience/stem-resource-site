@@ -1,7 +1,6 @@
 /*          General layout containers and spacer          */
 .page-layout {
   display: inline-grid;
-  /*padding-left: 20px;*/
   width: 100%;
 }
 
@@ -9,17 +8,14 @@
   margin-top: 10px !important;
   margin: 30px !important;
   max-width: 1500px !important;
-
 }
 
 .grid-container {
   display: grid;
   grid-column: 1 / -1;
-  /*grid-column-gap: 10px;*/
   grid-row-gap: 10px;
-  /*grid-template-columns: auto 200px auto auto auto 110px 80px;*/
-  grid-template-columns: 25% 15% 8% 15% 15% 6% 12%; /* 4% left over */
-  padding: 20px;
+  grid-template-columns: 25% 20% 10% 18% 18% 9%; /* With Likes / Comments: 25% 15% 8% 15% 15% 6% 12%;  */
+  padding: 30px;
 }
 
 .spacer {
@@ -28,20 +24,19 @@
 }
 
 /* overwrite bootstrap styling for headings */
-h3, h4 {
+h3,
+h4 {
   margin: auto;
   padding-top: 10px;
 }
 
-    
 /*                 Styling for the Filters section                */
 .filter-form {
   display: inline-grid;
   grid-column: 1 / -1;
-  /*grid-row: row 2;*/
-  grid-template-columns: auto auto auto auto;
+  /* grid-template-columns: auto auto auto auto; */
+  grid-template-columns: 20% 35% 20% 25%;
   background-color: #f7f7f7;
-  /*padding: 20px 20px 0px 0px;*/
   margin: 10px;
   overflow: hidden;
 }
@@ -55,32 +50,38 @@ h3, h4 {
   width: 100%;
   padding: 20px;
   margin-left: 20px;
-  /*display: inline-block;*/
 }
 
 .filter-button {
-  margin-top: 5px; 
+  margin-top: 5px;
 }
 
+#subject,
+#experience {
+  max-width: 300px;
+}
 
 .filter-instructions {
-  /*position: absolute;*/
   grid-column-start: 1;
-  grid-column-end: 4; 
+  grid-column-end: 4;
   text-align: left;
-  padding-left: 10px;
+  padding-left: 30px;
 }
 
+#submit-activity {
+  position: relative;
+  text-align: right;
+  padding-right: 30px;
+  top: -1em;
+}
 
 #self-led-checkbox {
   padding-top: 20px;
 }
 
 #self-led-checkbox .self-led {
-  /*margin-bottom: 20px;*/
-  /*left: -5px;*/
   top: 0px;
-  left: -240px; /*-130%;*/
+  left: -240px;
 }
 
 .disclaimer {
@@ -112,9 +113,8 @@ h3, h4 {
   display: inline-block;
   text-align: center;
 }
-  
+
 .feature {
-  /*width: 20vw;*/
   height: 15vw;
   padding: 5px 7px;
 }
@@ -128,7 +128,7 @@ h3, h4 {
 /*      Meta Data for results appears above activity grid     */
 #results-meta {
   grid-column: 2;
-  padding-left: 20px; 
+  padding-left: 20px;
   font-weight: bold;
   align-self: center;
 }
@@ -138,7 +138,6 @@ h3, h4 {
   display: inline-grid;
   grid-template-columns: 30% auto auto auto;
 }
-
 
 /*                Grid items and headers              */
 .item-header {
@@ -162,27 +161,69 @@ h3, h4 {
   justify-self: center;
 }
 
-.featherlight-content {
-  width: 60%;
+/* Basic Modal Styling */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1000; /* Sits on top */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7); /* Black with opacity */
 }
 
-.featherlight img,
-.featherlight iframe {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  max-height: 30vh;
-  /*max-width: 400px;*/
-  /*padding: 20px;*/
+.modal-content {
+  background-color: white;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 50%;
+  border-radius: 5px;
+  text-align: left;
 }
 
-.featherlight iframe {
-  height: 240px;
-  width: 400px;
+.info {
+  text-align: center;
+  font-size: 20px;
+}
+
+.adapt-header {
+  text-align: center;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modal-image {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-image img {
+  width: 80%;
+  height: 80%;
+  max-width: 20vw;
 }
 
 /*       header class is currently used for Adaptation activities and header text above filters       */
-.header img, .adapt {
+.header img,
+.adapt {
   float: left;
   height: 100px;
 }
@@ -197,7 +238,6 @@ h3, h4 {
   padding-bottom: 10px;
 }
 
-
 .sort {
   padding: 8px;
 }
@@ -209,7 +249,6 @@ h3, h4 {
   padding: 3px;
   position: absolute;
   cursor: pointer;
-  /*right: 20px;*/
 }
 
 .up {
@@ -244,12 +283,11 @@ h3, h4 {
   position: absolute;
 }
 
-
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
 
-  /* Position the experience tooltip */
+/* Position the experience tooltip */
 .experience {
   top: -100px;
   right: 105%;
@@ -261,13 +299,13 @@ h3, h4 {
   top: 20px;
 }
 
-  /* Position the keyword tooltip */
+/* Position the keyword tooltip */
 .keyword {
   top: -100px;
   left: 105%;
 }
 
-/*                   Comments (icon, tooltip, lightbox)                   */
+/*                   Comments (icon, tooltip, modal)                   */
 .comment-tooltip {
   position: relative;
   width: 100px;
@@ -300,10 +338,6 @@ h3, h4 {
   width: 90%;
   display: inline-block;
 }
-/*
-.comment-text {
-  width: 60vw;
-}*/
 
 /* tooltip position */
 .comment {
@@ -331,14 +365,12 @@ textarea {
   margin-top: 10px;
 }
 
-
 /*                Bottom Page Buttons            */
 #bottom-page-buttons {
   justify-self: right;
   width: 200px;
   margin-right: 400px;
 }
-
 
 /*      Scroll to Top Button      */
 .scroll-top {
@@ -357,7 +389,6 @@ textarea {
   color: #fff;
   font-size: 30px;
 }
-
 
 /*          Footer              */
 .footer {
@@ -383,13 +414,11 @@ textarea {
   height: 80px;
   margin-left: 20px;
   margin-right: 20px;
-  /*visibility: hidden;*/
 }
 
 .lds-large div,
 .lds-ring div {
   box-sizing: border-box;
-  /*display: block;*/
   position: absolute;
   width: 48px;
   height: 48px;
@@ -400,13 +429,16 @@ textarea {
   border-color: black transparent transparent transparent;
 }
 
-.lds-ring div, .lds-large div:nth-child(1) {
+.lds-ring div,
+.lds-large div:nth-child(1) {
   animation-delay: -0.45s;
 }
-.lds-ring div, .lds-large div:nth-child(2) {
+.lds-ring div,
+.lds-large div:nth-child(2) {
   animation-delay: -0.3s;
 }
-.lds-ring div, .lds-large div:nth-child(3) {
+.lds-ring div,
+.lds-large div:nth-child(3) {
   animation-delay: -0.15s;
 }
 @keyframes lds-ring {
@@ -417,5 +449,3 @@ textarea {
     transform: rotate(360deg);
   }
 }
-
-
