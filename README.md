@@ -1,6 +1,6 @@
 # WMSI STEM Resource Site
 
-Documentation for the [STEM Resource Site](https://whitemountainscience.org/stem-resource-site) page and ongoing development efforts. Starting in August 2024 the focus of this project is to make the backend more accessible with Google Sheets API, manage content (mostly images) through an affordable CDN like Google Cloud Console, refactor code and improve version control through Git.
+Documentation for the [STEM Resource Site](https://william-church.squarespace.com/stem-resource-site) page and ongoing development efforts. Starting in August 2024 the focus of this project is to make the backend more accessible with Google Sheets API, manage content (mostly images) through an affordable CDN like Google Cloud Console, refactor code and improve version control through Git.
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -35,7 +35,7 @@ Documentation for the [STEM Resource Site](https://whitemountainscience.org/stem
 
 This page is designed as a resource for educators to easily find activities for teaching STEM subjects. Some objectives of the project are:
 
-- Educators can easily find STEM activities on the [WMSI site page](https://whitemountainscience.org/stem-resource-site) by searching and filtering a curated list.
+- Educators can easily find STEM activities on the whitemountainscience (WMSI) website by searching and filtering a curated list.
 - WMSI staff can easily maintain the list of activities and their properties in a Google Sheet, and store an image for each activity in Google Cloud Storage
 - Educators external to WMSI can add activites to the sheet and potentially comment or like the activities that they find most useful (comments and likes not yet implemented)
 - This repo can be modified by WMSI staff and potentially external contributors to improve the page
@@ -94,7 +94,7 @@ You'll need the following.
 
 4. Choose a page / version of the site to run locally:
 
-- The [live version of this page](https://whitemountainscience.org/stem-resource-site) using Google Sheets can be found in /sheets-rebuild. After starting the local server, you can view the page at http://localhost:8080/sheets-rebuild/
+- The version of this page using Google Sheets can be found in /sheets-rebuild. After starting the local server, you can view the page at http://localhost:8080/sheets-rebuild/
 - To work with the original, Airtable-based version of the site go to http://localhost:8080/airtable-version/
 - If you want to see a basic example of the Google Sheets API in action go to http://localhost:8080/sheets-hello-world/
 
@@ -104,11 +104,22 @@ You'll need the following.
 
 ## Organization
 
-Since the wmsi site is built with Squarespace, the local organization of files for each version of the site mirrors the file structure that Squarespace sites use. Basically each site version folder (e.g. sheets-rebuild) has an index.html and a folder named `/s/` with CSS and JS files as well as a few images.
+Since the WMSI site is built with Squarespace, the local organization of files for each version of the site mirrors the file structure that Squarespace sites use. Basically each site version folder (e.g. sheets-rebuild) has an index.html and a folder named `/s/` with CSS and JS files as well as a few images.
 
-- `index.html` contains the HTML which can be found in the Code block on the [Squarespace STEM Resource page](https://whitemountainscience.org/stem-resource-site). If you make any changes to this file and want them to appear on the site, be sure to copy the html over by editing the Code block on that page.
+- `index.html` contains the HTML which can be found in the Code block on the Squarespace STEM Resource page. If you make any changes to this file and want them to appear on the site, be sure to copy the html over by editing the Code block on that page.
 - `stem_site.js` and `resource-table.js` contain all of the javascript code for building and displaying the table. As part of refactoring this site (August - October 2024) most of the table-specific functions appear within the ResourceTable class in resource-table.js
+- `stem_site.css` contains all the CSS styling rules for the site.
 - The airtable-version of the site uses `shared_functions.js` instead of `resource-table.js`
+- The airtable-version uses an additional library called [Featherlight](https://github.com/noelboss/featherlight) to render modals (lightboxes) for Featured Activities and the Info column link for each activity row. This dependency has been removed in the Google Sheets version.
+
+### External Files
+
+Starting with the most recent Google Sheets version of this site, image files can no longer be stored in the same table as most of the information about activities. Instead they're kept in the [Google Cloud CDN](https://console.cloud.google.com/storage/browser/_details/resource-site-testing/activity-images/wmsi-octopus.png;tab=live_object?project=resource-table).
+
+- Access to the Google Cloud project can be managed through the [IAM and Admin page](https://console.cloud.google.com/iam-admin/iam?_ga=2.221578335.67039758.1723830160-721416152.1723659175&project=resource-table&supportedpurview=project,folder,organizationId)
+- Activity information and image links are stored in this [Google Sheet](https://docs.google.com/spreadsheets/d/1091aKcZE0vCAWYMJHNxil81aY9n8EEszqzzGcTjUp7I/edit?gid=0#gid=0) and accessed using the [Google Sheets API](https://developers.google.com/sheets/api/guides/concepts)
+  - Once a new image is added to the CDN, you can assign it to a Source in the sheet by adding the CDN image link in Column S. New Sources will need to be added to Column R
+- Some activities have Youtube URLs assigned, which will appear in the "Info" modal for that activity in the table
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

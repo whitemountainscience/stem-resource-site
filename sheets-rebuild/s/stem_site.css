@@ -218,7 +218,7 @@ h4 {
 .modal-image img {
   width: 80%;
   height: 80%;
-  max-width: 20w;
+  max-width: 15vw !important;
 }
 
 .modal-image iframe {

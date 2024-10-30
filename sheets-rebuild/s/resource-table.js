@@ -356,7 +356,6 @@ class ResourceTable {
       $("i").removeAttr("alt");
       clickedElement.css("border-color", "green");
       clickedElement.attr("alt", "selected");
-      console.log(callback);
       if (typeof callback === "function") {
         callback();
       }
@@ -520,7 +519,6 @@ class ResourceTable {
     );
     html_template = html_template.replace("*materials", resource["Materials"]);
     html_template = html_template.replace("*tags", resource.Tags);
-    console.log("appending ", html_template);
     $("#content").append(html_template);
   }
 
@@ -531,10 +529,8 @@ class ResourceTable {
       @param {string} id - element ID to add video
   */
   addVideo(resource, id) {
-    console.log(resource);
     var video_template = $("#modal-video-template").html();
     video_template = video_template.replace("*src", resource["Youtube Url"]);
-    console.log("appending ", video_template, " to ", id + " a");
     $(id + " a")
       .first()
       .append(video_template);
