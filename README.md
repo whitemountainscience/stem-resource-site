@@ -62,9 +62,7 @@ Follow these instructions to run the STEM Resource Site page locally. This is th
 You'll need the following.
 
 - npm
-  ```sh
-  npm install npm@latest -g
-  ```
+  [Install instructions here](https://nodejs.org/en/download/package-manager)
 - http-server
   ```sh
   npm install http-server
