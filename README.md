@@ -1,6 +1,6 @@
 # WMSI STEM Resource Site
 
-Documentation for the [STEM Resource Site](https://william-church.squarespace.com/stem-resource-site) page and ongoing development efforts. Starting in August 2024 the focus of this project is to make the backend more accessible with Google Sheets API, manage content (mostly images) through an affordable CDN like Google Cloud Console, refactor code and improve version control through Git.
+Documentation for the [STEM Resource Site](https://www.whitemountainscience.org/stem-resource-site) page and ongoing development efforts. Starting in August 2024 the focus of this project is to make the backend more accessible with Google Sheets API, manage content (mostly images) through an affordable CDN like Google Cloud Console, refactor code and improve version control through Git.
 
 <!-- TABLE OF CONTENTS -->
 <details>
